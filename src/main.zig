@@ -19,21 +19,18 @@ pub fn main(init: std.process.Init) !void {
 
     try ppm.print("P3\n{d} {d}\n255\n", .{ image_width, image_height });
 
-    var j: u32 = 0;
-
-    while (j < image_height) : (j += 1) {
-        var i: u32 = 0;
-        while (i < image_width) : (i += 1) {
+    for (0..image_height) |j| {
+        std.debug.print("\rScanlines remaining: {d}: ", .{(image_height - j)});
+        for (0..image_width) |i| {
             const r: f64 = @as(f64, @floatFromInt(i)) / (image_width - 1);
             const g: f64 = @as(f64, @floatFromInt(j)) / (image_height - 1);
             const b: f64 = 0;
-
             const ir: u32 = @trunc(255.999 * r);
             const ig: u32 = @trunc(255.999 * g);
             const ib: u32 = @trunc(255.999 * b);
-
             try ppm.print("{d} {d} {d}\n", .{ ir, ig, ib });
         }
     }
+    std.debug.print("\rDone.                  \n", .{});
     try ppm.flush();
 }
