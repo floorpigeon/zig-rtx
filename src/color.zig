@@ -1,7 +1,7 @@
 const std = @import("std");
 const Vec3 = @import("Vec3.zig");
 
-const Color = Vec3;
+pub const Color = Vec3;
 
 pub fn writeColor(writer: anytype, pixel_color: Color) !void {
     const r: u8 = @trunc(255.999 * pixel_color.x);

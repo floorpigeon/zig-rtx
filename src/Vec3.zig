@@ -8,6 +8,7 @@ const Vec3 = @This();
 pub const Point3 = Vec3;
 
 // --- Namespace Functions (Operate on two distinct inputs) ---
+// (Can also be used as methods)
 
 pub fn add(u: Vec3, v: Vec3) Vec3 {
     return .{ .x = u.x + v.x, .y = u.y + v.y, .z = u.z + v.z };
@@ -34,6 +35,7 @@ pub fn cross(u: Vec3, v: Vec3) Vec3 {
 }
 
 // --- Method Functions (Operate on the instance itself) ---
+// (Intended to be used as methods)
 
 pub fn scale(self: Vec3, t: f64) Vec3 {
     return .{ .x = self.x * t, .y = self.y * t, .z = self.z * t };
