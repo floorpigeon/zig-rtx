@@ -3,6 +3,7 @@ const Vec3 = @import("Vec3.zig");
 const Point3 = Vec3.Point3;
 const Ray = @import("Ray.zig");
 const HittableList = @import("HittableList.zig");
+const Interval = @import("Interval.zig");
 
 const Sphere = @import("Sphere.zig");
 
@@ -25,9 +26,9 @@ pub const Hittable = union(enum) {
     sphere: Sphere,
     list: HittableList,
 
-    pub fn hit(self: Hittable, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+    pub fn hit(self: Hittable, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
         return switch (self) {
-            inline else => |h| h.hit(r, ray_tmin, ray_tmax, rec),
+            inline else => |h| h.hit(r, ray_t, rec),
         };
     }
 };

@@ -3,6 +3,7 @@ const Vec3 = @import("Vec3.zig");
 const Ray = @import("Ray.zig");
 const Point3 = Vec3.Point3;
 const HitRecord = @import("hittable.zig").HitRecord;
+const Interval = @import("Interval.zig");
 
 center: Point3,
 radius: f64,
@@ -13,7 +14,7 @@ pub fn init(center: Point3, radius: f64) Sphere {
     return .{ .center = center, .radius = @max(0, radius) };
 }
 
-pub fn hit(self: Sphere, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
+pub fn hit(self: Sphere, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
     const oc = Vec3.sub(self.center, r.orig);
     const a = r.dir.lengthSquared();
     const h = Vec3.dot(r.dir, oc);
@@ -26,9 +27,9 @@ pub fn hit(self: Sphere, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) 
 
     // Find the nearest root in the acceptable range
     var root = (h - sqrtd) / a;
-    if (root <= ray_tmin or ray_tmax <= root) {
+    if (!ray_t.surrounds(root)) {
         root = (h + sqrtd) / a;
-        if (root <= ray_tmin or ray_tmax <= root) return false;
+        if (!ray_t.surrounds(root)) return false;
     }
 
     rec.t = root;
