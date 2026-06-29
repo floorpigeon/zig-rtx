@@ -4,15 +4,18 @@ const Vec3 = @import("Vec3.zig");
 const Ray = @import("Ray.zig");
 const Color = color.Color;
 const Point3 = Vec3.Point3;
+const hittable = @import("hittable.zig");
+const Hittable = hittable.Hittable;
+const HittableList = @import("HittableList.zig");
 
 const zig_rtx = @import("zig_rtx");
 
 const aspect_ratio = 16.0 / 9.0;
 
-const image_width = 400;
+const image_height = 720;
 
 // Calculate the image height and make sure its at least 1
-const image_height = @max(1, @as(u32, @trunc(@as(f64, image_width) / aspect_ratio)));
+const image_width = @max(1, @as(u32, @trunc(@as(f64, image_height) * aspect_ratio)));
 
 // Camera
 const focal_length = 1.0;
@@ -32,11 +35,14 @@ const pixel_delta_v = viewport_v.div(image_height);
 const viewport_upper_left = camera_center.sub(.{ .z = focal_length }).sub(viewport_u.div(2)).sub(viewport_v.div(2));
 const pixel00_loc = viewport_upper_left.add(Vec3.add(pixel_delta_u, pixel_delta_v).scale(0.5));
 
-fn rayColor(r: Ray) Color {
-    const t = hitSphere(.{ .z = -1 }, 0.5, r);
-    if (t > 0) {
-        const N = r.at(t).sub(.{ .z = -1 }).unitVector();
-        return (Vec3{ .x = N.x + 1, .y = N.y + 1, .z = N.z + 1 }).scale(0.5);
+fn rayColor(r: Ray, world: Hittable) Color {
+    var rec: hittable.HitRecord = undefined;
+    if (world.hit(r, 0, std.math.inf(f64), &rec)) {
+        return rec.normal.add(Color{
+            .x = 1,
+            .y = 1,
+            .z = 1,
+        }).scale(0.5);
     }
 
     const unit_direction = r.dir.unitVector();
@@ -64,12 +70,21 @@ fn hitSphere(center: Point3, radius: f64, r: Ray) f64 {
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
+    const allocator = init.gpa;
     var dir = std.Io.Dir.cwd();
     var file = try dir.createFile(io, "image.ppm", .{});
     defer file.close(io);
     var write_buffer: [4096]u8 = undefined;
     var file_writer = file.writer(io, &write_buffer);
     const ppm = &file_writer.interface;
+
+    // World
+
+    var world: HittableList = .{};
+    defer world.deinit(allocator);
+
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .z = -1 }, .radius = 0.5 } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .y = -100.5, .z = -1 }, .radius = 100 } });
 
     // Render
 
@@ -82,7 +97,7 @@ pub fn main(init: std.process.Init) !void {
             const ray_direction = pixel_center.sub(camera_center);
             const r: Ray = .{ .orig = camera_center, .dir = ray_direction };
 
-            const pixel_color = rayColor(r);
+            const pixel_color = rayColor(r, .{ .list = world });
 
             try color.writeColor(ppm, pixel_color);
         }

@@ -2,6 +2,7 @@ const std = @import("std");
 const Vec3 = @import("Vec3.zig");
 const Point3 = Vec3.Point3;
 const Ray = @import("Ray.zig");
+const HittableList = @import("HittableList.zig");
 
 const Sphere = @import("Sphere.zig");
 
@@ -9,10 +10,20 @@ pub const HitRecord = struct {
     p: Point3,
     normal: Vec3,
     t: f64,
+    front_face: bool,
+
+    pub fn setFaceNormal(self: *HitRecord, r: Ray, outward_normal: Vec3) void {
+        // Sets the hit record normal vector.
+        // NOTE: the parameter 'outward_normal' is assumed to have unit length
+
+        self.front_face = Vec3.dot(r.dir, outward_normal) < 0;
+        self.normal = if (self.front_face) outward_normal else Vec3.sub(.{}, outward_normal);
+    }
 };
 
 pub const Hittable = union(enum) {
     sphere: Sphere,
+    list: HittableList,
 
     pub fn hit(self: Hittable, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) bool {
         return switch (self) {

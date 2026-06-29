@@ -2,7 +2,7 @@ const std = @import("std");
 const Vec3 = @import("Vec3.zig");
 const Ray = @import("Ray.zig");
 const Point3 = Vec3.Point3;
-const HitRecord = @import("Hittable.zig").HitRecord;
+const HitRecord = @import("hittable.zig").HitRecord;
 
 center: Point3,
 radius: f64,
@@ -33,7 +33,8 @@ pub fn hit(self: Sphere, r: Ray, ray_tmin: f64, ray_tmax: f64, rec: *HitRecord) 
 
     rec.t = root;
     rec.p = r.at(rec.t);
-    rec.normal = Vec3.sub(rec.p, self.center).div(self.radius);
+    const outward_normal = Vec3.sub(rec.p, self.center).div(self.radius);
+    rec.setFaceNormal(r, outward_normal);
 
     return true;
 }
