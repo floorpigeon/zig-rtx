@@ -32,7 +32,13 @@ const pixel_delta_v = viewport_v.div(image_height);
 const viewport_upper_left = camera_center.sub(.{ .z = focal_length }).sub(viewport_u.div(2)).sub(viewport_v.div(2));
 const pixel00_loc = viewport_upper_left.add(Vec3.add(pixel_delta_u, pixel_delta_v).scale(0.5));
 
-fn rayColor(r: Ray) Vec3 {
+fn rayColor(r: Ray) Color {
+    const t = hitSphere(.{ .z = -1 }, 0.5, r);
+    if (t > 0) {
+        const N = r.at(t).sub(.{ .z = -1 }).unitVector();
+        return (Vec3{ .x = N.x + 1, .y = N.y + 1, .z = N.z + 1 }).scale(0.5);
+    }
+
     const unit_direction = r.dir.unitVector();
     const a = 0.5 * (unit_direction.y + 1.0);
     return .{
@@ -40,6 +46,20 @@ fn rayColor(r: Ray) Vec3 {
         .y = std.math.lerp(@as(f64, 1.0), @as(f64, 0.7), a),
         .z = 1.0,
     };
+}
+
+fn hitSphere(center: Point3, radius: f64, r: Ray) f64 {
+    const oc: Vec3 = center.sub(r.orig);
+    const a = r.dir.lengthSquared();
+    const h = r.dir.dot(oc);
+    const c = oc.lengthSquared() - radius * radius;
+    const discriminant = h * h - a * c;
+
+    if (discriminant < 0) {
+        return -1;
+    } else {
+        return (h - @sqrt(discriminant)) / (a);
+    }
 }
 
 pub fn main(init: std.process.Init) !void {
