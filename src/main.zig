@@ -1,4 +1,7 @@
 const std = @import("std");
+const color = @import("color.zig");
+const Vec3 = @import("Vec3.zig");
+const Color = color.Color;
 
 const zig_rtx = @import("zig_rtx");
 
@@ -22,13 +25,12 @@ pub fn main(init: std.process.Init) !void {
     for (0..image_height) |j| {
         std.debug.print("\rScanlines remaining: {d}: ", .{(image_height - j)});
         for (0..image_width) |i| {
-            const r: f64 = @as(f64, @floatFromInt(i)) / (image_width - 1);
-            const g: f64 = @as(f64, @floatFromInt(j)) / (image_height - 1);
-            const b: f64 = 0;
-            const ir: u32 = @trunc(255.999 * r);
-            const ig: u32 = @trunc(255.999 * g);
-            const ib: u32 = @trunc(255.999 * b);
-            try ppm.print("{d} {d} {d}\n", .{ ir, ig, ib });
+            const pixel_color: Color = .{
+                .x = @as(f64, @floatFromInt(i)) / @as(f64, image_width - 1),
+                .y = @as(f64, @floatFromInt(j)) / @as(f64, image_height - 1),
+                .z = 0,
+            };
+            try color.writeColor(ppm, pixel_color);
         }
     }
     std.debug.print("\rDone.                  \n", .{});

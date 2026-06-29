@@ -1,23 +1,81 @@
 const std = @import("std");
 
-e: [3]f64,
+x: f64 = 0,
+y: f64 = 0,
+z: f64 = 0,
 
 const Vec3 = @This();
-
-// point3 just an alias for Vec3
-
 pub const Point3 = Vec3;
 
-pub fn init(e0: f64, e1: f64, e2: f64) Vec3 {
-    return .{ .e = .{ e0, e1, e2 } };
+// --- Namespace Functions (Operate on two distinct inputs) ---
+
+pub fn add(u: Vec3, v: Vec3) Vec3 {
+    return .{ .x = u.x + v.x, .y = u.y + v.y, .z = u.z + v.z };
 }
 
-pub fn x(self: Vec3) f64 {
-    return self.e[0];
+pub fn sub(u: Vec3, v: Vec3) Vec3 {
+    return .{ .x = u.x - v.x, .y = u.y - v.y, .z = u.z - v.z };
 }
-pub fn y(self: Vec3) f64 {
-    return self.e[1];
+
+pub fn mul(u: Vec3, v: Vec3) Vec3 {
+    return .{ .x = u.x * v.x, .y = u.y * v.y, .z = u.z * v.z };
 }
-pub fn z(self: Vec3) f64 {
-    return self.e[2];
+
+pub fn dot(u: Vec3, v: Vec3) f64 {
+    return u.x * v.x + u.y * v.y + u.z * v.z;
+}
+
+pub fn cross(u: Vec3, v: Vec3) Vec3 {
+    return .{
+        .x = u.y * v.z - u.z * v.y,
+        .y = u.z * v.x - u.x * v.z,
+        .z = u.x * v.y - u.y * v.x,
+    };
+}
+
+// --- Method Functions (Operate on the instance itself) ---
+
+pub fn scale(self: Vec3, t: f64) Vec3 {
+    return .{ .x = self.x * t, .y = self.y * t, .z = self.z * t };
+}
+
+pub fn div(self: Vec3, t: f64) Vec3 {
+    return self.scale(1.0 / t);
+}
+
+pub fn addAssign(self: *Vec3, v: Vec3) void {
+    self.x += v.x;
+    self.y += v.y;
+    self.z += v.z;
+}
+
+pub fn scaleAssign(self: *Vec3, t: f64) void {
+    self.x *= t;
+    self.y *= t;
+    self.z *= t;
+}
+
+pub fn lengthSquared(self: Vec3) f64 {
+    return self.x * self.x + self.y * self.y + self.z * self.z;
+}
+
+pub fn length(self: Vec3) f64 {
+    return @sqrt(self.lengthSquared());
+}
+
+pub fn unitVector(self: Vec3) Vec3 {
+    return self.div(self.length());
+}
+
+// --- format ---
+
+pub fn format(
+    self: Vec3,
+    comptime fmt: []const u8,
+    options: std.fmt.FormatOptions,
+    writer: anytype,
+) !void {
+    _ = fmt;
+    _ = options;
+    try writer.print("{d} {d} {d}", .{ self.x, self.y, self.z });
 }
