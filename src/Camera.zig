@@ -12,12 +12,13 @@ const random = @import("random.zig");
 
 const aspect_ratio = 16.0 / 9.0;
 
-const image_height = 360;
+const image_height = 720;
 
 // Calculate the image height and make sure its at least 1
 const image_width = @max(1, @as(u32, @trunc(@as(f64, image_height) * aspect_ratio)));
 const samples_per_pixel = 10;
 const pixel_samples_scale = 1.0 / @as(f64, samples_per_pixel);
+const max_depth = 10; // Maximum amount of ray bounces into scene
 
 // Camera
 const focal_length = 1.0;
@@ -46,7 +47,7 @@ pub fn render(world: HittableList, writer: *std.Io.Writer) !void {
             var pixel_color: Color = .{};
             for (0..samples_per_pixel) |_| {
                 const r = getRay(i, j);
-                pixel_color = pixel_color.add(rayColor(r, .{ .list = world }));
+                pixel_color = pixel_color.add(rayColor(r, max_depth, .{ .list = world }));
             }
             try color.writeColor(writer, pixel_color.scale(pixel_samples_scale));
         }
@@ -55,14 +56,15 @@ pub fn render(world: HittableList, writer: *std.Io.Writer) !void {
     try writer.flush();
 }
 
-fn rayColor(r: Ray, world: Hittable) Color {
+fn rayColor(r: Ray, depth: u32, world: Hittable) Color {
+
+    // If we-ve exceeded the ray bounce limit, no more light is gathered.
+    if (depth <= 0) return .{};
+
     var rec: hittable.HitRecord = undefined;
-    if (world.hit(r, .{ .min = 0, .max = Interval.universe.max }, &rec)) {
-        return rec.normal.add(Color{
-            .x = 1,
-            .y = 1,
-            .z = 1,
-        }).scale(0.5);
+    if (world.hit(r, .{ .min = 0.001, .max = Interval.universe.max }, &rec)) {
+        const direction = rec.normal.add(Vec3.randomUnitVector());
+        return rayColor(.{ .orig = rec.p, .dir = direction }, depth - 1, world).scale(0.5);
     }
 
     const unit_direction = r.dir.unitVector();

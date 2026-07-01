@@ -78,7 +78,7 @@ pub fn randomUnitVector() Vec3 {
     while (true) {
         const p = Vec3.randomRange(-1, 1);
         const lensq = p.lengthSquared();
-        if (1e-160 < lensq and lensq <= 1) return p / @sqrt(lensq);
+        if (1e-160 < lensq and lensq <= 1) return p.div(@sqrt(lensq));
     }
 }
 
