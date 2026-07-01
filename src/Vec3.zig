@@ -1,4 +1,5 @@
 const std = @import("std");
+const rng = @import("random.zig");
 
 x: f64 = 0,
 y: f64 = 0,
@@ -45,18 +46,6 @@ pub fn div(self: Vec3, t: f64) Vec3 {
     return self.scale(1.0 / t);
 }
 
-pub fn addAssign(self: *Vec3, v: Vec3) void {
-    self.x += v.x;
-    self.y += v.y;
-    self.z += v.z;
-}
-
-pub fn scaleAssign(self: *Vec3, t: f64) void {
-    self.x *= t;
-    self.y *= t;
-    self.z *= t;
-}
-
 pub fn lengthSquared(self: Vec3) f64 {
     return self.x * self.x + self.y * self.y + self.z * self.z;
 }
@@ -65,8 +54,41 @@ pub fn length(self: Vec3) f64 {
     return @sqrt(self.lengthSquared());
 }
 
+pub fn random() Vec3 {
+    return .{
+        .x = rng.randomDouble(),
+        .y = rng.randomDouble(),
+        .z = rng.randomDouble(),
+    };
+}
+
+pub fn randomRange(min: f64, max: f64) Vec3 {
+    return .{
+        .x = rng.randomDoubleRange(min, max),
+        .y = rng.randomDoubleRange(min, max),
+        .z = rng.randomDoubleRange(min, max),
+    };
+}
+
 pub fn unitVector(self: Vec3) Vec3 {
     return self.div(self.length());
+}
+
+pub fn randomUnitVector() Vec3 {
+    while (true) {
+        const p = Vec3.randomRange(-1, 1);
+        const lensq = p.lengthSquared();
+        if (1e-160 < lensq and lensq <= 1) return p / @sqrt(lensq);
+    }
+}
+
+pub fn randomOnHemisphere(normal: Vec3) Vec3 {
+    const on_unit_sphere = randomUnitVector();
+    if (dot(on_unit_sphere, normal) > 0.0) { // In the same hemisphere as the normal
+        return on_unit_sphere;
+    } else {
+        return on_unit_sphere.scale(-1);
+    }
 }
 
 // --- format ---
