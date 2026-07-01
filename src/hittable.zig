@@ -4,12 +4,15 @@ const Point3 = Vec3.Point3;
 const Ray = @import("Ray.zig");
 const HittableList = @import("HittableList.zig");
 const Interval = @import("Interval.zig");
+const material = @import("material.zig");
+const Material = material.Material;
 
 const Sphere = @import("Sphere.zig");
 
 pub const HitRecord = struct {
     p: Point3,
     normal: Vec3,
+    mat: Material,
     t: f64,
     front_face: bool,
 

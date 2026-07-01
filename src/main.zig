@@ -9,6 +9,8 @@ const Hittable = hittable.Hittable;
 const HittableList = @import("HittableList.zig");
 const Interval = @import("Interval.zig");
 const Camera = @import("Camera.zig");
+const material = @import("material.zig");
+const Material = material.Material;
 
 const zig_rtx = @import("zig_rtx");
 
@@ -32,8 +34,15 @@ pub fn main(init: std.process.Init) !void {
     var world: HittableList = .{};
     defer world.deinit(allocator);
 
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .z = -1 }, .radius = 0.5 } });
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .y = -100.5, .z = -1 }, .radius = 100 } });
+    const material_ground: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.8, .y = 0.8, .z = 0.0 } } };
+    const material_center: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.1, .y = 0.2, .z = 0.5 } } };
+    const material_left: Material = .{ .dielectric = .{ .refraction_index = 1.50 } };
+    const material_right: Material = .{ .metal = .{ .albedo = .{ .x = 0.8, .y = 0.6, .z = 0.2 }, .fuzz = 1.0 } };
+
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 0.0, .y = -100.5, .z = -1.0 }, .radius = 100.0, .mat = material_ground } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 0.0, .y = 0.0, .z = -1.2 }, .radius = 0.5, .mat = material_center } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .x = -1.0, .y = 0.0, .z = -1.0 }, .radius = 0.5, .mat = material_left } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 1.0, .y = 0.0, .z = -1.0 }, .radius = 0.5, .mat = material_right } });
 
     try Camera.render(world, ppm);
 }

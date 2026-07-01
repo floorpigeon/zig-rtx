@@ -16,9 +16,9 @@ const image_height = 720;
 
 // Calculate the image height and make sure its at least 1
 const image_width = @max(1, @as(u32, @trunc(@as(f64, image_height) * aspect_ratio)));
-const samples_per_pixel = 10;
+const samples_per_pixel = 512;
 const pixel_samples_scale = 1.0 / @as(f64, samples_per_pixel);
-const max_depth = 10; // Maximum amount of ray bounces into scene
+const max_depth = 16; // Maximum amount of ray bounces into scene
 
 // Camera
 const focal_length = 1.0;
@@ -42,7 +42,7 @@ pub fn render(world: HittableList, writer: *std.Io.Writer) !void {
     try writer.print("P3\n{d} {d}\n255\n", .{ image_width, image_height });
 
     for (0..image_height) |j| {
-        std.debug.print("\rScanlines remaining: {d}: ", .{(image_height - j)});
+        std.debug.print("\rScanlines remaining: {d} ", .{(image_height - j)});
         for (0..image_width) |i| {
             var pixel_color: Color = .{};
             for (0..samples_per_pixel) |_| {
@@ -63,8 +63,10 @@ fn rayColor(r: Ray, depth: u32, world: Hittable) Color {
 
     var rec: hittable.HitRecord = undefined;
     if (world.hit(r, .{ .min = 0.001, .max = Interval.universe.max }, &rec)) {
-        const direction = rec.normal.add(Vec3.randomUnitVector());
-        return rayColor(.{ .orig = rec.p, .dir = direction }, depth - 1, world).scale(0.5);
+        if (rec.mat.scatter(r, rec)) |result| {
+            return Vec3.mul(result.attenuation, rayColor(result.scattered, depth - 1, world));
+        }
+        return Color{};
     }
 
     const unit_direction = r.dir.unitVector();

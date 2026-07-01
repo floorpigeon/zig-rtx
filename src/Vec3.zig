@@ -38,6 +38,11 @@ pub fn cross(u: Vec3, v: Vec3) Vec3 {
 // --- Method Functions (Operate on the instance itself) ---
 // (Intended to be used as methods)
 
+pub fn nearZero(self: Vec3) bool {
+    const s = 1e-8;
+    return @abs(self.x) < s and @abs(self.y) < s and @abs(self.z) < s;
+}
+
 pub fn scale(self: Vec3, t: f64) Vec3 {
     return .{ .x = self.x * t, .y = self.y * t, .z = self.z * t };
 }
@@ -89,6 +94,17 @@ pub fn randomOnHemisphere(normal: Vec3) Vec3 {
     } else {
         return on_unit_sphere.scale(-1);
     }
+}
+
+pub fn reflect(v: Vec3, n: Vec3) Vec3 {
+    return v.sub(n.scale(2 * dot(v, n)));
+}
+
+pub fn refract(uv: Vec3, n: Vec3, etai_over_etat: f64) Vec3 {
+    const cos_theta = @min(dot(uv.scale(-1), n), 1.0);
+    const r_out_perp = uv.add(n.scale(cos_theta)).scale(etai_over_etat);
+    const r_out_parallel = n.scale(-@sqrt(@abs(1.0 - r_out_perp.lengthSquared())));
+    return r_out_perp.add(r_out_parallel);
 }
 
 // --- format ---

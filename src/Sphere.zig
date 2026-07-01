@@ -4,9 +4,11 @@ const Ray = @import("Ray.zig");
 const Point3 = Vec3.Point3;
 const HitRecord = @import("hittable.zig").HitRecord;
 const Interval = @import("Interval.zig");
+const Material = @import("material.zig").Material;
 
 center: Point3,
 radius: f64,
+mat: Material,
 
 const Sphere = @This();
 
@@ -36,6 +38,7 @@ pub fn hit(self: Sphere, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
     rec.p = r.at(rec.t);
     const outward_normal = Vec3.sub(rec.p, self.center).div(self.radius);
     rec.setFaceNormal(r, outward_normal);
+    rec.mat = self.mat;
 
     return true;
 }

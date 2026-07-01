@@ -4,10 +4,20 @@ const Interval = @import("Interval.zig");
 
 pub const Color = Vec3;
 
+pub fn linearToGamma(linear_component: f64) f64 {
+    if (linear_component > 0) return @sqrt(linear_component);
+    return 0;
+}
+
 pub fn writeColor(writer: anytype, pixel_color: Color) !void {
-    const r = pixel_color.x;
-    const g = pixel_color.y;
-    const b = pixel_color.z;
+    var r = pixel_color.x;
+    var g = pixel_color.y;
+    var b = pixel_color.z;
+
+    // Apply a linear to gamma transform for gamma 2
+    r = linearToGamma(r);
+    g = linearToGamma(g);
+    b = linearToGamma(b);
 
     // Translate the [0,1] component values into their byte range [0,255]
     const intensity: Interval = .{ .min = 0.000, .max = 0.999 };
