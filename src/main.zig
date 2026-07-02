@@ -46,5 +46,12 @@ pub fn main(init: std.process.Init) !void {
     try world.add(allocator, .{ .sphere = .{ .center = .{ .x = -1.0, .y = 0.0, .z = -1.0 }, .radius = 0.4, .mat = material_bubble } });
     try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 1.0, .y = 0.0, .z = -1.0 }, .radius = 0.5, .mat = material_right } });
 
-    try Camera.render(world, ppm);
+    const camera = Camera.init(.{
+        .vfov = 90,
+        .lookfrom = .{ .x = -2, .y = 2, .z = 1 },
+        .lookat = .{ .z = -1 },
+        .vup = .{ .y = 1 },
+    });
+    try camera.render(world, ppm);
+    try ppm.flush();
 }

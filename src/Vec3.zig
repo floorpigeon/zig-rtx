@@ -79,6 +79,17 @@ pub fn unitVector(self: Vec3) Vec3 {
     return self.div(self.length());
 }
 
+pub fn randomInUnitDisk() Vec3 {
+    while (true) {
+        const p: Vec3 = .{
+            .x = rng.randomDoubleRange(-1, 1),
+            .y = rng.randomDoubleRange(-1, 1),
+            .z = 0,
+        };
+        if (p.lengthSquared() < 1) return p;
+    }
+}
+
 pub fn randomUnitVector() Vec3 {
     while (true) {
         const p = Vec3.randomRange(-1, 1);
