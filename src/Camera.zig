@@ -14,29 +14,7 @@ const Camera = @This();
 
 // --- User Configurable Inputs ---
 // with provided defaults
-aspect_ratio: f64,
-image_height: u32,
-samples_per_pixel: u32,
-max_depth: u32,
-vfov: f64,
-lookfrom: Point3,
-lookat: Point3,
-vup: Vec3,
-defocus_angle: f64,
-focus_dist: f64,
-
-// --- Derived State / Private fields ---
-image_width: u32,
-pixel_samples_scale: f64,
-center: Point3,
-pixel00_loc: Point3,
-pixel_delta_u: Vec3,
-pixel_delta_v: Vec3,
-
-defocus_disk_u: Vec3,
-defocus_disk_v: Vec3,
-
-pub fn init(config: struct {
+pub const Config = struct {
     aspect_ratio: f64 = 16.0 / 9.0,
     image_height: u32 = 720,
     samples_per_pixel: u32 = 128,
@@ -45,68 +23,64 @@ pub fn init(config: struct {
     lookfrom: Point3 = .{ .x = 0, .y = 0, .z = 1 },
     lookat: Point3 = .{ .x = 0, .y = 0, .z = -1 },
     vup: Vec3 = .{ .x = 0, .y = 1, .z = 0 },
-}) Camera {
-    // 1. Math casts use @floatFromInt with @as inference
+    defocus_angle: f64 = 0,
+    focus_dist: f64 = 10,
+};
+
+// --- Derived State / Private fields ---
+config: Config = .{},
+
+image_width: u32 = undefined,
+pixel_samples_scale: f64 = undefined,
+center: Point3 = undefined,
+pixel00_loc: Point3 = undefined,
+pixel_delta_u: Vec3 = undefined,
+pixel_delta_v: Vec3 = undefined,
+defocus_disk_u: Vec3 = undefined,
+defocus_disk_v: Vec3 = undefined,
+
+pub fn init(config: Config) Camera {
+    var result: Camera = undefined;
+    result.config = config;
+
     const height_f = @as(f64, @floatFromInt(config.image_height));
-    const width_f = @trunc(height_f * config.aspect_ratio);
-
-    // Explicit safety-checked cast back to int
-    const width = @max(1, @as(u32, @intFromFloat(width_f)));
-    const scale = 1.0 / @as(f64, @floatFromInt(config.samples_per_pixel));
-
-    const center = config.lookfrom;
+    const width = @max(1, @as(u32, @intFromFloat(@trunc(height_f * config.aspect_ratio))));
     const focal_length = config.lookfrom.sub(config.lookat).length();
-    const theta = std.math.degreesToRadians(config.vfov);
-    const h = std.math.tan(theta / 2.0);
-
+    const h = std.math.tan(std.math.degreesToRadians(config.vfov) / 2.0);
     const viewport_height = 2.0 * h * focal_length;
     const viewport_width = viewport_height * (@as(f64, @floatFromInt(width)) / height_f);
-
-    const w = Vec3.unitVector(config.lookfrom.sub(config.lookat));
-    const u = Vec3.unitVector(Vec3.cross(config.vup, w));
+    const w = config.lookfrom.sub(config.lookat).unitVector();
+    const u = Vec3.cross(config.vup, w).unitVector();
     const v = Vec3.cross(w, u);
-
     const viewport_u = u.scale(viewport_width);
     const viewport_v = v.scale(-viewport_height);
-
     const delta_u = viewport_u.div(@as(f64, @floatFromInt(width)));
     const delta_v = viewport_v.div(height_f);
-
-    const viewport_upper_left = center
+    const viewport_upper_left = config.lookfrom
         .sub(w.scale(focal_length))
         .sub(viewport_u.div(2.0))
         .sub(viewport_v.div(2.0));
 
-    const p00_loc = viewport_upper_left.add(delta_u.add(delta_v).scale(0.5));
+    result.image_width = width;
+    result.pixel_samples_scale = 1.0 / @as(f64, @floatFromInt(config.samples_per_pixel));
+    result.center = config.lookfrom;
+    result.pixel00_loc = viewport_upper_left.add(delta_u.add(delta_v).scale(0.5));
+    result.pixel_delta_u = delta_u;
+    result.pixel_delta_v = delta_v;
 
-    return .{
-        .aspect_ratio = config.aspect_ratio,
-        .image_height = config.image_height,
-        .samples_per_pixel = config.samples_per_pixel,
-        .max_depth = config.max_depth,
-        .vfov = config.vfov,
-        .lookfrom = config.lookfrom,
-        .lookat = config.lookat,
-        .vup = config.vup,
-        .image_width = width,
-        .pixel_samples_scale = scale,
-        .center = center,
-        .pixel00_loc = p00_loc,
-        .pixel_delta_u = delta_u,
-        .pixel_delta_v = delta_v,
-    };
+    return result;
 }
 
 pub fn render(self: *const Camera, world: HittableList, writer: *std.Io.Writer) !void {
-    try writer.print("P3\n{d} {d}\n255\n", .{ self.image_width, self.image_height });
+    try writer.print("P3\n{d} {d}\n255\n", .{ self.image_width, self.config.image_height });
 
-    for (0..self.image_height) |j| {
-        std.debug.print("\rScanlines remaining: {d} ", .{self.image_height - j});
+    for (0..self.config.image_height) |j| {
+        std.debug.print("\rScanlines remaining: {d} ", .{self.config.image_height - j});
         for (0..self.image_width) |i| {
             var pixel_color: Color = .{};
-            for (0..self.samples_per_pixel) |_| {
+            for (0..self.config.samples_per_pixel) |_| {
                 const r = self.getRay(i, j);
-                pixel_color = pixel_color.add(self.rayColor(r, self.max_depth, .{ .list = world }));
+                pixel_color = pixel_color.add(self.rayColor(r, self.config.max_depth, .{ .list = world }));
             }
             try color.writeColor(writer, pixel_color.scale(self.pixel_samples_scale));
         }
