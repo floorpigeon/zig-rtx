@@ -16,26 +16,36 @@ const image_height = 720;
 
 // Calculate the image height and make sure its at least 1
 const image_width = @max(1, @as(u32, @trunc(@as(f64, image_height) * aspect_ratio)));
-const samples_per_pixel = 512;
+const samples_per_pixel = 100;
 const pixel_samples_scale = 1.0 / @as(f64, samples_per_pixel);
-const max_depth = 16; // Maximum amount of ray bounces into scene
+const max_depth = 50; // Maximum amount of ray bounces into scene
+
+const vfov = 90.0;
+const lookfrom: Point3 = .{ .x = 0, .y = 0, .z = 0 };
+const lookat: Point3 = .{ .x = 0, .y = 0, .z = -1 };
+const vup: Vec3 = .{ .x = 0, .y = 1, .z = 0 };
 
 // Camera
-const focal_length = 1.0;
-const viewport_height = 2.0;
+const center = lookfrom;
+const focal_length = lookfrom.sub(lookat).length();
+const theta = std.math.degreesToRadians(vfov);
+const h = std.math.tan(theta / 2.0);
+const viewport_height = 2 * h * focal_length;
 const viewport_width = viewport_height * (@as(f64, image_width) / image_height);
-const center: Point3 = .{};
 
 // Calculate the vectors across the horisontal and down the vertical viewpower edges.
-const viewport_u: Vec3 = .{ .x = viewport_width };
-const viewport_v: Vec3 = .{ .y = -viewport_height };
+const viewport_u: Vec3 = u.scale(viewport_width);
+const viewport_v: Vec3 = v.scale(-viewport_height);
 
 // Calculate the horizontal and vertical delta vectors from pixel to pixel
 const pixel_delta_u = viewport_u.div(image_width);
 const pixel_delta_v = viewport_v.div(image_height);
+const u = Vec3.unitVector(lookfrom.sub(lookat));
+const v = Vec3.unitVector(Vec3.cross(vup, w));
+const w = Vec3.cross(w, u);
 
 // Calculate the location of the upper left pixel.
-const viewport_upper_left = center.sub(.{ .z = focal_length }).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+const viewport_upper_left = center.sub(w.scale(focal_length)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
 const pixel00_loc = viewport_upper_left.add(Vec3.add(pixel_delta_u, pixel_delta_v).scale(0.5));
 
 pub fn render(world: HittableList, writer: *std.Io.Writer) !void {

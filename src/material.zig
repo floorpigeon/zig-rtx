@@ -1,3 +1,4 @@
+const std = @import("std");
 const Vec3 = @import("Vec3.zig");
 const Ray = @import("Ray.zig");
 const Color = Vec3;
@@ -45,9 +46,24 @@ pub const Dielectric = struct {
         const attenuation = Color{ .x = 1.0, .y = 1.0, .z = 1.0 };
         const ri: f64 = if (rec.front_face) 1.0 / self.refraction_index else self.refraction_index;
         const unit_direction = Vec3.unitVector(r_in.dir);
-        const refracted = Vec3.refract(unit_direction, rec.normal, ri);
+        const cos_theta: f64 = @min(Vec3.dot(unit_direction.scale(-1), rec.normal), 1.0);
+        const sin_theta: f64 = @sqrt(1.0 - cos_theta * cos_theta);
 
-        return .{ .attenuation = attenuation, .scattered = .{ .orig = rec.p, .dir = refracted } };
+        const cannot_refract: bool = ri * sin_theta > 1.0;
+        var direction: Vec3 = undefined;
+        if (cannot_refract) {
+            direction = Vec3.reflect(unit_direction, rec.normal);
+        } else {
+            direction = Vec3.refract(unit_direction, rec.normal, ri);
+        }
+
+        return .{ .attenuation = attenuation, .scattered = .{ .orig = rec.p, .dir = direction } };
+    }
+    fn reflect(cosine: f64, refraction_index: f64) f64 {
+        // Use Schlick's approximation for reflectance
+        var r0 = (1 - refraction_index) / (1 + refraction_index);
+        r0 *= r0;
+        return r0 + (1 - r0) * std.math.pow(f64, 1 - cosine, 5);
     }
 };
 
