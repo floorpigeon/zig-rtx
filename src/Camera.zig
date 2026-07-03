@@ -42,12 +42,13 @@ defocus_disk_v: Vec3 = undefined,
 pub fn init(config: Config) Camera {
     var result: Camera = undefined;
     result.config = config;
+    result.center = config.lookfrom;
 
     const height_f = @as(f64, @floatFromInt(config.image_height));
     const width = @max(1, @as(u32, @intFromFloat(@trunc(height_f * config.aspect_ratio))));
-    const focal_length = config.lookfrom.sub(config.lookat).length();
+    // const focal_length = config.lookfrom.sub(config.lookat).length();
     const h = std.math.tan(std.math.degreesToRadians(config.vfov) / 2.0);
-    const viewport_height = 2.0 * h * focal_length;
+    const viewport_height = 2.0 * h * config.focus_dist;
     const viewport_width = viewport_height * (@as(f64, @floatFromInt(width)) / height_f);
     const w = config.lookfrom.sub(config.lookat).unitVector();
     const u = Vec3.cross(config.vup, w).unitVector();
@@ -56,14 +57,17 @@ pub fn init(config: Config) Camera {
     const viewport_v = v.scale(-viewport_height);
     const delta_u = viewport_u.div(@as(f64, @floatFromInt(width)));
     const delta_v = viewport_v.div(height_f);
-    const viewport_upper_left = config.lookfrom
-        .sub(w.scale(focal_length))
-        .sub(viewport_u.div(2.0))
-        .sub(viewport_v.div(2.0));
+    const viewport_upper_left = result.center.sub(w.scale(config.focus_dist)).sub(viewport_u.div(2)).sub(viewport_v.div(2));
+    result.pixel00_loc = viewport_upper_left.add(delta_u.add(delta_v).scale(0.5));
+    // Might have to reorder these
+
+    // Calculate the camera defocus disk basis vectors.
+    const defocus_radius = config.focus_dist * @tan(std.math.degreesToRadians(config.defocus_angle / 2));
+    result.defocus_disk_u = u.scale(defocus_radius);
+    result.defocus_disk_v = v.scale(defocus_radius);
 
     result.image_width = width;
     result.pixel_samples_scale = 1.0 / @as(f64, @floatFromInt(config.samples_per_pixel));
-    result.center = config.lookfrom;
     result.pixel00_loc = viewport_upper_left.add(delta_u.add(delta_v).scale(0.5));
     result.pixel_delta_u = delta_u;
     result.pixel_delta_v = delta_v;
@@ -109,12 +113,15 @@ fn rayColor(self: *const Camera, r: Ray, depth: u32, world: Hittable) Color {
 }
 
 fn getRay(self: *const Camera, i: usize, j: usize) Ray {
+    // Construct a camera ray originating from the defocus disk and directed at a randomly
+    // sampled point around the pixel location i, j.
+
     const offset = sampleSquare();
     const pixel_sample = self.pixel00_loc
         .add(self.pixel_delta_u.scale(@as(f64, @floatFromInt(i)) + offset.x))
         .add(self.pixel_delta_v.scale(@as(f64, @floatFromInt(j)) + offset.y));
 
-    const ray_origin = self.center;
+    const ray_origin = if (self.config.defocus_angle <= 0) self.center else defocusDiskSample(self);
     const ray_direction = pixel_sample.sub(ray_origin);
 
     return .{ .orig = ray_origin, .dir = ray_direction };
@@ -122,4 +129,12 @@ fn getRay(self: *const Camera, i: usize, j: usize) Ray {
 
 fn sampleSquare() Vec3 {
     return .{ .x = random.randomDouble() - 0.5, .y = random.randomDouble() - 0.5, .z = 0 };
+}
+
+fn defocusDiskSample(self: *const Camera) Point3 {
+    // Returns a random point in the camera defocus disk.
+    const p = Vec3.randomInUnitDisk();
+    return self.center
+        .add(self.defocus_disk_u.scale(p.x))
+        .add(self.defocus_disk_v.scale(p.y));
 }

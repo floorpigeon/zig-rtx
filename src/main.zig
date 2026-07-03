@@ -47,10 +47,13 @@ pub fn main(init: std.process.Init) !void {
     try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 1.0, .y = 0.0, .z = -1.0 }, .radius = 0.5, .mat = material_right } });
 
     const camera = Camera.init(.{
-        .vfov = 90,
+        .vfov = 20,
         .lookfrom = .{ .x = -2, .y = 2, .z = 1 },
         .lookat = .{ .z = -1 },
         .vup = .{ .y = 1 },
+        .defocus_angle = 10.0,
+        .focus_dist = 3.4,
+        .samples_per_pixel = 100,
     });
     try camera.render(world, ppm);
     try ppm.flush();
