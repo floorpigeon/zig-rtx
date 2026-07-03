@@ -1,9 +1,7 @@
 const std = @import("std");
 const rng = @import("random.zig");
 
-x: f64 = 0,
-y: f64 = 0,
-z: f64 = 0,
+e: [3]f64 = .{ 0, 0, 0 },
 
 const Vec3 = @This();
 pub const Point3 = Vec3;
@@ -12,26 +10,28 @@ pub const Point3 = Vec3;
 // (Can also be used as methods)
 
 pub fn add(u: Vec3, v: Vec3) Vec3 {
-    return .{ .x = u.x + v.x, .y = u.y + v.y, .z = u.z + v.z };
+    return .{ .e = .{ u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2] } };
 }
 
 pub fn sub(u: Vec3, v: Vec3) Vec3 {
-    return .{ .x = u.x - v.x, .y = u.y - v.y, .z = u.z - v.z };
+    return .{ .e = .{ u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2] } };
 }
 
 pub fn mul(u: Vec3, v: Vec3) Vec3 {
-    return .{ .x = u.x * v.x, .y = u.y * v.y, .z = u.z * v.z };
+    return .{ .e = .{ u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2] } };
 }
 
 pub fn dot(u: Vec3, v: Vec3) f64 {
-    return u.x * v.x + u.y * v.y + u.z * v.z;
+    return u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2];
 }
 
 pub fn cross(u: Vec3, v: Vec3) Vec3 {
     return .{
-        .x = u.y * v.z - u.z * v.y,
-        .y = u.z * v.x - u.x * v.z,
-        .z = u.x * v.y - u.y * v.x,
+        .e = .{
+            u.e[1] * v.e[2] - u.e[2] * v.e[1],
+            u.e[2] * v.e[0] - u.e[0] * v.e[2],
+            u.e[0] * v.e[1] - u.e[1] * v.e[0],
+        },
     };
 }
 
@@ -40,11 +40,11 @@ pub fn cross(u: Vec3, v: Vec3) Vec3 {
 
 pub fn nearZero(self: Vec3) bool {
     const s = 1e-8;
-    return @abs(self.x) < s and @abs(self.y) < s and @abs(self.z) < s;
+    return @abs(self.e[0]) < s and @abs(self.e[1]) < s and @abs(self.e[2]) < s;
 }
 
 pub fn scale(self: Vec3, t: f64) Vec3 {
-    return .{ .x = self.x * t, .y = self.y * t, .z = self.z * t };
+    return .{ .e = .{ self.e[0] * t, self.e[1] * t, self.e[2] * t } };
 }
 
 pub fn div(self: Vec3, t: f64) Vec3 {
@@ -52,7 +52,7 @@ pub fn div(self: Vec3, t: f64) Vec3 {
 }
 
 pub fn lengthSquared(self: Vec3) f64 {
-    return self.x * self.x + self.y * self.y + self.z * self.z;
+    return self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2];
 }
 
 pub fn length(self: Vec3) f64 {
@@ -61,17 +61,21 @@ pub fn length(self: Vec3) f64 {
 
 pub fn random() Vec3 {
     return .{
-        .x = rng.randomDouble(),
-        .y = rng.randomDouble(),
-        .z = rng.randomDouble(),
+        .e = .{
+            rng.randomDouble(),
+            rng.randomDouble(),
+            rng.randomDouble(),
+        },
     };
 }
 
 pub fn randomRange(min: f64, max: f64) Vec3 {
     return .{
-        .x = rng.randomDoubleRange(min, max),
-        .y = rng.randomDoubleRange(min, max),
-        .z = rng.randomDoubleRange(min, max),
+        .e = .{
+            rng.randomDoubleRange(min, max),
+            rng.randomDoubleRange(min, max),
+            rng.randomDoubleRange(min, max),
+        },
     };
 }
 
@@ -82,9 +86,11 @@ pub fn unitVector(self: Vec3) Vec3 {
 pub fn randomInUnitDisk() Vec3 {
     while (true) {
         const p: Vec3 = .{
-            .x = rng.randomDoubleRange(-1, 1),
-            .y = rng.randomDoubleRange(-1, 1),
-            .z = 0,
+            .e = .{
+                rng.randomDoubleRange(-1, 1),
+                rng.randomDoubleRange(-1, 1),
+                0,
+            },
         };
         if (p.lengthSquared() < 1) return p;
     }
@@ -128,5 +134,5 @@ pub fn format(
 ) !void {
     _ = fmt;
     _ = options;
-    try writer.print("{d} {d} {d}", .{ self.x, self.y, self.z });
+    try writer.print("{d} {d} {d}", .{ self.e[0], self.e[1], self.e[2] });
 }

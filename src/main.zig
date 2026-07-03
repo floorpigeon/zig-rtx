@@ -35,17 +35,17 @@ pub fn main(init: std.process.Init) !void {
     var world: HittableList = .{};
     defer world.deinit(allocator);
 
-    const ground_material: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.5, .y = 0.5, .z = 0.5 } } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .y = -1000 }, .radius = 1000, .mat = ground_material } });
+    const ground_material: Material = .{ .lambertian = .{ .albedo = .{ .e = .{ 0.5, 0.5, 0.5 } } } };
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ 0, -1000, 0 } }, .radius = 1000, .mat = ground_material } });
 
     var a: f64 = -11;
     while (a < 11) : (a += 1) {
         var b: f64 = -11;
         while (b < 11) : (b += 1) {
             const choose_mat = rng.randomDouble();
-            const center: Point3 = .{ .x = a + 0.9 * rng.randomDouble(), .y = 0.2, .z = b + 0.9 * rng.randomDouble() };
+            const center: Point3 = .{ .e = .{ a + 0.9 * rng.randomDouble(), 0.2, b + 0.9 * rng.randomDouble() } };
 
-            if (center.sub(.{ .x = 4, .y = 0.2 }).length() > 0.9) {
+            if (center.sub(.{ .e = .{ 4, 0.2, 0 } }).length() > 0.9) {
                 var sphere_material: Material = undefined;
 
                 if (choose_mat < 0.8) {
@@ -68,21 +68,21 @@ pub fn main(init: std.process.Init) !void {
         }
     }
     const material1: Material = .{ .dielectric = .{ .refraction_index = 1.5 } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .y = 1 }, .radius = 1, .mat = material1 } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ 0, 1, 0 } }, .radius = 1, .mat = material1 } });
 
-    const material2: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.4, .y = 0.2, .z = 0.1 } } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .x = -4, .y = 1 }, .radius = 1, .mat = material2 } });
+    const material2: Material = .{ .lambertian = .{ .albedo = .{ .e = .{ 0.4, 0.2, 0.1 } } } };
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ -4, 1, 0 } }, .radius = 1, .mat = material2 } });
 
-    const material3: Material = .{ .metal = .{ .albedo = .{ .x = 0.7, .y = 0.6, .z = 0.5 }, .fuzz = 0 } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 4, .y = 1 }, .radius = 1, .mat = material3 } });
+    const material3: Material = .{ .metal = .{ .albedo = .{ .e = .{ 0.7, 0.6, 0.5 } }, .fuzz = 0 } };
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ 4, 1, 0 } }, .radius = 1, .mat = material3 } });
 
     const camera = Camera.init(.{
         .aspect_ratio = 16.0 / 9.0,
-        .image_height = 720,
-        .samples_per_pixel = 500,
-        .max_depth = 50,
+        .image_height = 360,
+        .samples_per_pixel = 10,
+        .max_depth = 4,
         .vfov = 20,
-        .lookfrom = .{ .x = 13, .y = 2, .z = 3 },
+        .lookfrom = .{ .e = .{ 13, 2, 3 } },
         .defocus_angle = 0.6,
         .focus_dist = 10,
     });

@@ -20,9 +20,9 @@ pub const Config = struct {
     samples_per_pixel: u32 = 128,
     max_depth: u32 = 64,
     vfov: f64 = 90.0,
-    lookfrom: Point3 = .{ .x = 0, .y = 0, .z = 1 },
-    lookat: Point3 = .{ .x = 0, .y = 0, .z = -1 },
-    vup: Vec3 = .{ .x = 0, .y = 1, .z = 0 },
+    lookfrom: Point3 = .{ .e = .{ 0, 0, 1 } },
+    lookat: Point3 = .{ .e = .{ 0, 0, -1 } },
+    vup: Vec3 = .{ .e = .{ 0, 1, 0 } },
     defocus_angle: f64 = 0,
     focus_dist: f64 = 10,
 };
@@ -104,11 +104,13 @@ fn rayColor(self: *const Camera, r: Ray, depth: u32, world: Hittable) Color {
     }
 
     const unit_direction = r.dir.unitVector();
-    const a = 0.5 * (unit_direction.y + 1.0);
+    const a = 0.5 * (unit_direction.e[1] + 1.0);
     return .{
-        .x = std.math.lerp(@as(f64, 1.0), @as(f64, 0.5), a),
-        .y = std.math.lerp(@as(f64, 1.0), @as(f64, 0.7), a),
-        .z = 1.0,
+        .e = .{
+            std.math.lerp(@as(f64, 1.0), @as(f64, 0.5), a),
+            std.math.lerp(@as(f64, 1.0), @as(f64, 0.7), a),
+            1.0,
+        },
     };
 }
 
@@ -118,8 +120,8 @@ fn getRay(self: *const Camera, i: usize, j: usize) Ray {
 
     const offset = sampleSquare();
     const pixel_sample = self.pixel00_loc
-        .add(self.pixel_delta_u.scale(@as(f64, @floatFromInt(i)) + offset.x))
-        .add(self.pixel_delta_v.scale(@as(f64, @floatFromInt(j)) + offset.y));
+        .add(self.pixel_delta_u.scale(@as(f64, @floatFromInt(i)) + offset.e[0]))
+        .add(self.pixel_delta_v.scale(@as(f64, @floatFromInt(j)) + offset.e[1]));
 
     const ray_origin = if (self.config.defocus_angle <= 0) self.center else defocusDiskSample(self);
     const ray_direction = pixel_sample.sub(ray_origin);
@@ -128,13 +130,13 @@ fn getRay(self: *const Camera, i: usize, j: usize) Ray {
 }
 
 fn sampleSquare() Vec3 {
-    return .{ .x = random.randomDouble() - 0.5, .y = random.randomDouble() - 0.5, .z = 0 };
+    return .{ .e = .{ random.randomDouble() - 0.5, random.randomDouble() - 0.5, 0 } };
 }
 
 fn defocusDiskSample(self: *const Camera) Point3 {
     // Returns a random point in the camera defocus disk.
     const p = Vec3.randomInUnitDisk();
     return self.center
-        .add(self.defocus_disk_u.scale(p.x))
-        .add(self.defocus_disk_v.scale(p.y));
+        .add(self.defocus_disk_u.scale(p.e[0]))
+        .add(self.defocus_disk_v.scale(p.e[1]));
 }

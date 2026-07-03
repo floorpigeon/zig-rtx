@@ -10,9 +10,9 @@ pub fn linearToGamma(linear_component: f64) f64 {
 }
 
 pub fn writeColor(writer: anytype, pixel_color: Color) !void {
-    var r = pixel_color.x;
-    var g = pixel_color.y;
-    var b = pixel_color.z;
+    var r = pixel_color.e[0];
+    var g = pixel_color.e[1];
+    var b = pixel_color.e[2];
 
     // Apply a linear to gamma transform for gamma 2
     r = linearToGamma(r);
