@@ -35,18 +35,6 @@ pub fn main(init: std.process.Init) !void {
     var world: HittableList = .{};
     defer world.deinit(allocator);
 
-    // const material_ground: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.8, .y = 0.8, .z = 0.0 } } };
-    // const material_center: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.1, .y = 0.2, .z = 0.5 } } };
-    // const material_left: Material = .{ .dielectric = .{ .refraction_index = 1.50 } };
-    // const material_bubble: Material = .{ .dielectric = .{ .refraction_index = 1.00 / 1.50 } };
-    // const material_right: Material = .{ .metal = .{ .albedo = .{ .x = 0.8, .y = 0.6, .z = 0.2 }, .fuzz = 1.0 } };
-
-    // try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 0.0, .y = -100.5, .z = -1.0 }, .radius = 100.0, .mat = material_ground } });
-    // try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 0.0, .y = 0.0, .z = -1.2 }, .radius = 0.5, .mat = material_center } });
-    // try world.add(allocator, .{ .sphere = .{ .center = .{ .x = -1.0, .y = 0.0, .z = -1.0 }, .radius = 0.5, .mat = material_left } });
-    // try world.add(allocator, .{ .sphere = .{ .center = .{ .x = -1.0, .y = 0.0, .z = -1.0 }, .radius = 0.4, .mat = material_bubble } });
-    // try world.add(allocator, .{ .sphere = .{ .center = .{ .x = 1.0, .y = 0.0, .z = -1.0 }, .radius = 0.5, .mat = material_right } });
-
     const ground_material: Material = .{ .lambertian = .{ .albedo = .{ .x = 0.5, .y = 0.5, .z = 0.5 } } };
     try world.add(allocator, .{ .sphere = .{ .center = .{ .y = -1000 }, .radius = 1000, .mat = ground_material } });
 
