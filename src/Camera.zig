@@ -125,8 +125,9 @@ fn getRay(self: *const Camera, i: usize, j: usize) Ray {
 
     const ray_origin = if (self.config.defocus_angle <= 0) self.center else defocusDiskSample(self);
     const ray_direction = pixel_sample.sub(ray_origin);
+    const ray_time = random.randomDouble();
 
-    return .{ .origin = ray_origin, .direction = ray_direction };
+    return .{ .origin = ray_origin, .direction = ray_direction, .time = ray_time };
 }
 
 fn sampleSquare() Vec3 {

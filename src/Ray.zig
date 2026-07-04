@@ -1,8 +1,8 @@
 const Vec3 = @import("Vec3.zig");
 const Point3 = Vec3.Point3;
 
-origin: Point3,
-direction: Vec3,
+origin: Point3 = .{},
+direction: Vec3 = .{},
 time: f64 = 0,
 
 const Ray = @This();

@@ -6,7 +6,7 @@ const HitRecord = @import("hittable.zig").HitRecord;
 const Interval = @import("Interval.zig");
 const Material = @import("material.zig").Material;
 
-center: Point3,
+center: Ray = .{},
 radius: f64,
 mat: Material,
 
@@ -17,7 +17,8 @@ pub fn init(center: Point3, radius: f64) Sphere {
 }
 
 pub fn hit(self: Sphere, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
-    const oc = Vec3.sub(self.center, r.origin);
+    const current_center = self.center.at(r.time);
+    const oc = Vec3.sub(current_center, r.origin);
     const a = r.direction.lengthSquared();
     const h = Vec3.dot(r.direction, oc);
     const c = oc.lengthSquared() - self.radius * self.radius;
@@ -36,7 +37,7 @@ pub fn hit(self: Sphere, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
 
     rec.t = root;
     rec.p = r.at(rec.t);
-    const outward_normal = Vec3.sub(rec.p, self.center).div(self.radius);
+    const outward_normal = Vec3.sub(rec.p, current_center).div(self.radius);
     rec.setFaceNormal(r, outward_normal);
     rec.mat = self.mat;
 

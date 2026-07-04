@@ -36,7 +36,7 @@ pub fn main(init: std.process.Init) !void {
     defer world.deinit(allocator);
 
     const ground_material: Material = .{ .lambertian = .{ .albedo = .{ .e = .{ 0.5, 0.5, 0.5 } } } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ 0, -1000, 0 } }, .radius = 1000, .mat = ground_material } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = .{ .e = .{ 0, -1000, 0 } } }, .radius = 1000, .mat = ground_material } });
 
     var a: f64 = -11;
     while (a < 11) : (a += 1) {
@@ -52,35 +52,35 @@ pub fn main(init: std.process.Init) !void {
                     // difuse
                     const albedo = Color.random().mul(Color.random());
                     sphere_material = .{ .lambertian = .{ .albedo = albedo } };
-                    try world.add(allocator, .{ .sphere = .{ .center = center, .radius = 0.2, .mat = sphere_material } });
+                    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = center }, .radius = 0.2, .mat = sphere_material } });
                 } else if (choose_mat < 0.95) {
                     // metal
                     const albedo = Color.randomRange(0.5, 1);
                     const fuzz = rng.randomDoubleRange(0, 0.5);
                     sphere_material = .{ .metal = .{ .albedo = albedo, .fuzz = fuzz } };
-                    try world.add(allocator, .{ .sphere = .{ .center = center, .radius = 0.2, .mat = sphere_material } });
+                    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = center }, .radius = 0.2, .mat = sphere_material } });
                 } else {
                     // glass
                     sphere_material = .{ .dielectric = .{ .refraction_index = 1.5 } };
-                    try world.add(allocator, .{ .sphere = .{ .center = center, .radius = 0.2, .mat = sphere_material } });
+                    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = center }, .radius = 0.2, .mat = sphere_material } });
                 }
             }
         }
     }
     const material1: Material = .{ .dielectric = .{ .refraction_index = 1.5 } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ 0, 1, 0 } }, .radius = 1, .mat = material1 } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = .{ .e = .{ 0, 1, 0 } } }, .radius = 1, .mat = material1 } });
 
     const material2: Material = .{ .lambertian = .{ .albedo = .{ .e = .{ 0.4, 0.2, 0.1 } } } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ -4, 1, 0 } }, .radius = 1, .mat = material2 } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = .{ .e = .{ -4, 1, 0 } } }, .radius = 1, .mat = material2 } });
 
     const material3: Material = .{ .metal = .{ .albedo = .{ .e = .{ 0.7, 0.6, 0.5 } }, .fuzz = 0 } };
-    try world.add(allocator, .{ .sphere = .{ .center = .{ .e = .{ 4, 1, 0 } }, .radius = 1, .mat = material3 } });
+    try world.add(allocator, .{ .sphere = .{ .center = .{ .origin = .{ .e = .{ 4, 1, 0 } } }, .radius = 1, .mat = material3 } });
 
     const camera = Camera.init(.{
         .aspect_ratio = 16.0 / 9.0,
-        .image_height = 360,
-        .samples_per_pixel = 10,
-        .max_depth = 4,
+        .image_height = 1440,
+        .samples_per_pixel = 128,
+        .max_depth = 64,
         .vfov = 20,
         .lookfrom = .{ .e = .{ 13, 2, 3 } },
         .defocus_angle = 0.6,
