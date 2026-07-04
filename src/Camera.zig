@@ -103,7 +103,7 @@ fn rayColor(self: *const Camera, r: Ray, depth: u32, world: Hittable) Color {
         return Color{};
     }
 
-    const unit_direction = r.dir.unitVector();
+    const unit_direction = r.direction.unitVector();
     const a = 0.5 * (unit_direction.e[1] + 1.0);
     return .{
         .e = .{
@@ -126,7 +126,7 @@ fn getRay(self: *const Camera, i: usize, j: usize) Ray {
     const ray_origin = if (self.config.defocus_angle <= 0) self.center else defocusDiskSample(self);
     const ray_direction = pixel_sample.sub(ray_origin);
 
-    return .{ .orig = ray_origin, .dir = ray_direction };
+    return .{ .origin = ray_origin, .direction = ray_direction };
 }
 
 fn sampleSquare() Vec3 {

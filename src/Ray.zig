@@ -1,8 +1,9 @@
 const Vec3 = @import("Vec3.zig");
 const Point3 = Vec3.Point3;
 
-orig: Point3,
-dir: Vec3,
+origin: Point3,
+direction: Vec3,
+time: f64 = 0,
 
 const Ray = @This();
 
@@ -13,5 +14,5 @@ pub fn at(self: Ray, t: f64) Point3 {
     // Plug in a different t and P(t) moves the point along the ray.
     // Add in negative t values and you can go anywhere on the 3D line.
     // For positive t, you get only the parts in front of A, and this is what is often called a half-line or a ray.
-    return self.orig.add(self.dir.scale(t));
+    return self.origin.add(self.direction.scale(t));
 }

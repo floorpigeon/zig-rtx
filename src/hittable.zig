@@ -20,7 +20,7 @@ pub const HitRecord = struct {
         // Sets the hit record normal vector.
         // NOTE: the parameter 'outward_normal' is assumed to have unit length
 
-        self.front_face = Vec3.dot(r.dir, outward_normal) < 0;
+        self.front_face = Vec3.dot(r.direction, outward_normal) < 0;
         self.normal = if (self.front_face) outward_normal else Vec3.sub(.{}, outward_normal);
     }
 };

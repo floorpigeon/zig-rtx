@@ -17,9 +17,9 @@ pub fn init(center: Point3, radius: f64) Sphere {
 }
 
 pub fn hit(self: Sphere, r: Ray, ray_t: Interval, rec: *HitRecord) bool {
-    const oc = Vec3.sub(self.center, r.orig);
-    const a = r.dir.lengthSquared();
-    const h = Vec3.dot(r.dir, oc);
+    const oc = Vec3.sub(self.center, r.origin);
+    const a = r.direction.lengthSquared();
+    const h = Vec3.dot(r.direction, oc);
     const c = oc.lengthSquared() - self.radius * self.radius;
 
     const discriminant = h * h - a * c;

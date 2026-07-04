@@ -21,7 +21,7 @@ pub const Lambertian = struct {
         if (scatter_direction.nearZero()) scatter_direction = rec.normal;
         return .{
             .attenuation = self.albedo,
-            .scattered = .{ .orig = rec.p, .dir = scatter_direction },
+            .scattered = .{ .origin = rec.p, .direction = scatter_direction },
         };
     }
 };
@@ -32,10 +32,10 @@ pub const Metal = struct {
     // metal(const color& albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
     fuzz: f64,
     pub fn scatter(self: Metal, r_in: Ray, rec: HitRecord) ?ScatterResult {
-        var reflected = Vec3.reflect(r_in.dir, rec.normal);
+        var reflected = Vec3.reflect(r_in.direction, rec.normal);
         reflected = Vec3.unitVector(reflected).add(Vec3.randomUnitVector().scale(self.fuzz));
-        const scattered: Ray = .{ .orig = rec.p, .dir = reflected };
-        if (Vec3.dot(scattered.dir, rec.normal) < 0) return null;
+        const scattered: Ray = .{ .origin = rec.p, .direction = reflected };
+        if (Vec3.dot(scattered.direction, rec.normal) < 0) return null;
         return .{ .attenuation = self.albedo, .scattered = scattered };
     }
 };
@@ -45,7 +45,7 @@ pub const Dielectric = struct {
     pub fn scatter(self: Dielectric, r_in: Ray, rec: HitRecord) ?ScatterResult {
         const attenuation = Color{ .e = .{ 1.0, 1.0, 1.0 } };
         const ri: f64 = if (rec.front_face) 1.0 / self.refraction_index else self.refraction_index;
-        const unit_direction = Vec3.unitVector(r_in.dir);
+        const unit_direction = Vec3.unitVector(r_in.direction);
         const cos_theta: f64 = @min(Vec3.dot(unit_direction.scale(-1), rec.normal), 1.0);
         const sin_theta: f64 = @sqrt(1.0 - cos_theta * cos_theta);
 
@@ -57,7 +57,7 @@ pub const Dielectric = struct {
             direction = Vec3.refract(unit_direction, rec.normal, ri);
         }
 
-        return .{ .attenuation = attenuation, .scattered = .{ .orig = rec.p, .dir = direction } };
+        return .{ .attenuation = attenuation, .scattered = .{ .origin = rec.p, .direction = direction } };
     }
     fn reflect(cosine: f64, refraction_index: f64) f64 {
         // Use Schlick's approximation for reflectance
